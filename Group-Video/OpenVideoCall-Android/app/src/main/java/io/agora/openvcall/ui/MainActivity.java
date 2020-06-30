@@ -2,8 +2,11 @@ package io.agora.openvcall.ui;
 
 import android.content.Intent;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import androidx.appcompat.app.ActionBar;
+
+import android.provider.Settings;
 import android.text.Editable;
 import android.text.Html;
 import android.text.TextUtils;
@@ -15,7 +18,6 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.TextView;
@@ -28,16 +30,18 @@ import org.slf4j.LoggerFactory;
 
 import io.agora.openvcall.R;
 import io.agora.openvcall.model.ConstantApp;
+import io.agora.openvcall.service.OverlayService;
 
 public class MainActivity extends BaseActivity {
 
+    public static int ACTION_MANAGE_OVERLAY_PERMISSION_REQUEST_CODE = 2323;
+
     private final static Logger log = LoggerFactory.getLogger(MainActivity.class);
 
-    private static final String TEMP_CHANNEL_ID = "111111";
+    static final String TEMP_CHANNEL_ID = "test";
     static final String uri = "https://facechatoverlay.com";  // manifest의 intent filter에 정의한 host와 동일
     static final String uriPrefix = "https://facechatoverlay.page.link";  // firebase에서 제공하는 무료 도메인 사용
 
-    private Button inviteButton;
     private TextView appLinkView;
 
     @Override
@@ -108,8 +112,6 @@ public class MainActivity extends BaseActivity {
         appLinkView = (TextView) findViewById(R.id.text_app_link);
         appLinkView.setClickable(true);
         appLinkView.setMovementMethod(LinkMovementMethod.getInstance());
-
-        inviteButton = (Button) findViewById(R.id.button_invite);
     }
 
     @Override
@@ -144,6 +146,8 @@ public class MainActivity extends BaseActivity {
 
         Uri dynamicLinkUriWithChannelId = getDynamicLinkUriWithChannelId(dynamicLink, TEMP_CHANNEL_ID);
         appLinkView.setText(Html.fromHtml(dynamicLinkUriWithChannelId.toString()));
+
+        forwardToRoom();
     }
 
     public void forwardToRoom() {

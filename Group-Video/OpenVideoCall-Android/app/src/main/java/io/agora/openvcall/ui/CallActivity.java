@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.media.AudioManager;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -11,6 +12,8 @@ import android.preference.PreferenceManager;
 import androidx.appcompat.app.ActionBar;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+
+import android.provider.Settings;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -35,8 +38,10 @@ import io.agora.openvcall.R;
 import io.agora.openvcall.model.AGEventHandler;
 import io.agora.openvcall.model.ConstantApp;
 import io.agora.openvcall.model.DuringCallEventHandler;
+import io.agora.openvcall.model.EngineConfig;
 import io.agora.openvcall.model.Message;
 import io.agora.openvcall.model.User;
+import io.agora.openvcall.service.OverlayService;
 import io.agora.openvcall.ui.layout.GridVideoViewContainer;
 import io.agora.openvcall.ui.layout.InChannelMessageListAdapter;
 import io.agora.openvcall.ui.layout.MessageListDecoration;
@@ -54,6 +59,8 @@ import io.agora.rtc.video.VideoCanvas;
 import io.agora.rtc.video.VideoEncoderConfiguration;
 
 public class CallActivity extends BaseActivity implements DuringCallEventHandler {
+
+    private static final int ACTION_MANAGE_OVERLAY_PERMISSION_REQUEST_CODE = 1;
 
     public static final int LAYOUT_TYPE_DEFAULT = 0;
     public static final int LAYOUT_TYPE_SMALL = 1;
@@ -166,7 +173,8 @@ public class CallActivity extends BaseActivity implements DuringCallEventHandler
         initMessageList();
         notifyMessageChanged(new Message(new User(0, null), "start join " + channelName + " as " + (config().mUid & 0xFFFFFFFFL)));
 
-        joinChannel(channelName, config().mUid);
+//        joinChannel(channelName, config().mUid);
+        joinRtcChannelWithToken(channelName, config().mUid);
 
         optional();
     }
@@ -309,6 +317,21 @@ public class CallActivity extends BaseActivity implements DuringCallEventHandler
         closeIME(findViewById(R.id.msg_content));
         findViewById(R.id.msg_input_container).setVisibility(View.GONE);
         findViewById(R.id.bottom_action_container).setVisibility(View.VISIBLE);
+    }
+
+    public void onClickOverlay(View view) {
+        System.out.println("hi");
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {   // 마시멜로우 이상일 경우
+            if (Settings.canDrawOverlays(this)) {
+                startService(new Intent(CallActivity.this, OverlayService.class));
+            } else {
+                Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                        Uri.parse("package:" + getPackageName()));// 체크
+                startActivityForResult(intent, ACTION_MANAGE_OVERLAY_PERMISSION_REQUEST_CODE);
+            }
+        } else {
+            startService(new Intent(CallActivity.this, OverlayService.class));
+        }
     }
 
     private void initMessageList() {

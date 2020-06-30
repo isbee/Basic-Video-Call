@@ -22,6 +22,9 @@ import io.agora.propeller.Constant;
 import io.agora.rtc.RtcEngine;
 import io.agora.rtc.video.VideoCanvas;
 import io.agora.rtc.video.VideoEncoderConfiguration;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -309,6 +312,27 @@ public abstract class BaseActivity extends AppCompatActivity {
         config().mChannel = channel;
         enablePreProcessor();
         log.debug("joinChannel " + channel + " " + uid);
+    }
+
+    public final void joinRtcChannelWithToken(final String channel, int uid) {
+        RtcChannelTokenService tokenService = RtcChannelTokenServiceClient.getClient();
+        // TODO channelId 문자로 받을 것
+        tokenService.getRtcChannelToken(channel, String.valueOf(uid)).enqueue(new Callback<RtcChannelToken>() {
+            @Override
+            public void onResponse(Call<RtcChannelToken> call, Response<RtcChannelToken> response) {
+                RtcChannelToken token = response.body();
+
+                rtcEngine().joinChannel(token.getToken(), channel, "OpenVCall", uid);
+                config().mChannel = channel;
+                enablePreProcessor();
+                log.debug("joinChannel " + channel + " " + uid);
+            }
+
+            @Override
+            public void onFailure(Call<RtcChannelToken> call, Throwable t) {
+                System.out.println("Shit");
+            }
+        });
     }
 
     /**

@@ -165,5 +165,21 @@
             android:layout_height="144dp"
             android:layout_above="@id/bottom_container" />
 
+        <Button
+            android:id="@+id/button_overlay"
+            android:layout_width="wrap_content"
+            android:layout_height="38dp"
+            android:layout_marginStart="16dp"
+            android:layout_marginLeft="16dp"
+            android:layout_marginTop="18dp"
+            android:layout_marginBottom="18dp"
+            android:layout_marginEnd="16dp"
+            android:layout_marginRight="16dp"
+            android:layout_above="@id/msg_list"
+            android:background="@color/agora_blue"
+            android:onClick="onClickOverlay"
+            android:text="@string/label_overlay"
+            android:textColor="@android:color/white" />
+
     </RelativeLayout>
 </FrameLayout>
