@@ -2,7 +2,7 @@ package io.agora.openvcall.ui.layout;
 
 import android.app.Activity;
 import android.content.Context;
-import android.support.v7.widget.RecyclerView;
+import androidx.recyclerview.widget.RecyclerView;
 import android.util.DisplayMetrics;
 import android.view.SurfaceView;
 import android.view.ViewGroup;
