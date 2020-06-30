@@ -110,17 +110,6 @@ public class MainActivity extends BaseActivity {
         appLinkView.setMovementMethod(LinkMovementMethod.getInstance());
 
         inviteButton = (Button) findViewById(R.id.button_invite);
-        inviteButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-//                System.out.println(rtcChannel.)
-
-                DynamicLink dynamicLink = buildDynamicLink(uri, uriPrefix);
-
-                Uri dynamicLinkUriWithChannelId = getDynamicLinkUriWithChannelId(dynamicLink, TEMP_CHANNEL_ID);
-                appLinkView.setText(Html.fromHtml(dynamicLinkUriWithChannelId.toString()));
-            }
-        });
     }
 
     @Override
@@ -151,7 +140,10 @@ public class MainActivity extends BaseActivity {
     }
 
     public void onClickInvite(View view) {
+        DynamicLink dynamicLink = buildDynamicLink(uri, uriPrefix);
 
+        Uri dynamicLinkUriWithChannelId = getDynamicLinkUriWithChannelId(dynamicLink, TEMP_CHANNEL_ID);
+        appLinkView.setText(Html.fromHtml(dynamicLinkUriWithChannelId.toString()));
     }
 
     public void forwardToRoom() {
