@@ -1,19 +1,27 @@
 package io.agora.openvcall.ui;
 
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import androidx.appcompat.app.ActionBar;
 import android.text.Editable;
+import android.text.Html;
 import android.text.TextUtils;
 import android.text.TextWatcher;
+import android.text.method.LinkMovementMethod;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Spinner;
+import android.widget.TextView;
+
+import com.google.firebase.dynamiclinks.DynamicLink;
+import com.google.firebase.dynamiclinks.FirebaseDynamicLinks;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,6 +32,13 @@ import io.agora.openvcall.model.ConstantApp;
 public class MainActivity extends BaseActivity {
 
     private final static Logger log = LoggerFactory.getLogger(MainActivity.class);
+
+    private static final String TEMP_CHANNEL_ID = "111111";
+    static final String uri = "https://facechatoverlay.com";  // manifest의 intent filter에 정의한 host와 동일
+    static final String uriPrefix = "https://facechatoverlay.page.link";  // firebase에서 제공하는 무료 도메인 사용
+
+    private Button inviteButton;
+    private TextView appLinkView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -89,6 +104,23 @@ public class MainActivity extends BaseActivity {
         if (!TextUtils.isEmpty(lastEncryptionKey)) {
             v_encryption_key.setText(lastEncryptionKey);
         }
+
+        appLinkView = (TextView) findViewById(R.id.text_app_link);
+        appLinkView.setClickable(true);
+        appLinkView.setMovementMethod(LinkMovementMethod.getInstance());
+
+        inviteButton = (Button) findViewById(R.id.button_invite);
+        inviteButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+//                System.out.println(rtcChannel.)
+
+                DynamicLink dynamicLink = buildDynamicLink(uri, uriPrefix);
+
+                Uri dynamicLinkUriWithChannelId = getDynamicLinkUriWithChannelId(dynamicLink, TEMP_CHANNEL_ID);
+                appLinkView.setText(Html.fromHtml(dynamicLinkUriWithChannelId.toString()));
+            }
+        });
     }
 
     @Override
@@ -116,6 +148,10 @@ public class MainActivity extends BaseActivity {
 
     public void onClickJoin(View view) {
         forwardToRoom();
+    }
+
+    public void onClickInvite(View view) {
+
     }
 
     public void forwardToRoom() {
@@ -150,5 +186,23 @@ public class MainActivity extends BaseActivity {
 
     }
 
+    private DynamicLink buildDynamicLink(String uri, String uriPrefix) {
+        DynamicLink dynamicLink = FirebaseDynamicLinks.getInstance().createDynamicLink()
+                .setLink(Uri.parse(uri))
+                .setDomainUriPrefix(uriPrefix)
+                // Open links with this app on Android
+                .setAndroidParameters(new DynamicLink.AndroidParameters.Builder().build())
+                // Open links with com.example.ios on iOS
+//                .setIosParameters(new DynamicLink.IosParameters.Builder("com.example.ios").build())
+                .buildDynamicLink();
+        return dynamicLink;
+    }
 
+    private Uri getDynamicLinkUriWithChannelId(DynamicLink dynamicLink, String channelId) {
+        Uri.Builder uriBuilder = dynamicLink.getUri().buildUpon();
+        uriBuilder.appendQueryParameter("channelid", channelId);
+        Uri dynamicLinkUriWithChannelId = uriBuilder.build();
+
+        return dynamicLinkUriWithChannelId;
+    }
 }

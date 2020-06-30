@@ -13,6 +13,8 @@
 
     <string name="label_join">Join</string>
 
+    <string name="label_invite">Invite</string>
+
     <string name="label_do_network_test">Test your network</string>
 
     <string name="label_confirm">Confirm</string>

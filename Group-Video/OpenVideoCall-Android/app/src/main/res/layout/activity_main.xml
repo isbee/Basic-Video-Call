@@ -104,6 +104,33 @@
             android:text="@string/label_join"
             android:textColor="@android:color/white" />
 
+        <Button
+            android:id="@+id/button_invite"
+            android:layout_width="match_parent"
+            android:layout_height="38dp"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginStart="16dp"
+            android:layout_marginLeft="16dp"
+            android:layout_marginTop="18dp"
+            android:layout_marginEnd="16dp"
+            android:layout_marginRight="16dp"
+            android:background="@color/agora_blue"
+            android:enabled="false"
+            android:onClick="onClickInvite"
+            android:text="@string/label_invite"
+            android:textColor="@android:color/white" />
+
+        <TextView
+            android:id="@+id/text_app_link"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginStart="16dp"
+            android:layout_marginLeft="16dp"
+            android:layout_marginTop="18dp"
+            android:layout_marginEnd="16dp"
+            android:layout_marginRight="16dp" />
+
         <View
             android:layout_width="match_parent"
             android:layout_height="120dp" />
