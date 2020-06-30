@@ -115,7 +115,6 @@
             android:layout_marginEnd="16dp"
             android:layout_marginRight="16dp"
             android:background="@color/agora_blue"
-            android:enabled="false"
             android:onClick="onClickInvite"
             android:text="@string/label_invite"
             android:textColor="@android:color/white" />
@@ -129,7 +128,9 @@
             android:layout_marginLeft="16dp"
             android:layout_marginTop="18dp"
             android:layout_marginEnd="16dp"
-            android:layout_marginRight="16dp" />
+            android:layout_marginRight="16dp"
+            android:autoLink="web"
+            android:linksClickable="true" />
 
         <View
             android:layout_width="match_parent"
