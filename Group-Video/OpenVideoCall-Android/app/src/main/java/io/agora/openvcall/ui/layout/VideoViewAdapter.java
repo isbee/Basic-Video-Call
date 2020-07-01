@@ -1,6 +1,5 @@
 package io.agora.openvcall.ui.layout;
 
-import android.app.Activity;
 import android.content.Context;
 import androidx.recyclerview.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -31,9 +30,9 @@ public abstract class VideoViewAdapter extends RecyclerView.Adapter<RecyclerView
 
     protected int mLocalUid;
 
-    public VideoViewAdapter(Activity activity, int localUid, HashMap<Integer, SurfaceView> uids) {
-        mInflater = ((Activity) activity).getLayoutInflater();
-        mContext = ((Activity) activity).getApplicationContext();
+    public VideoViewAdapter(LayoutInflater inflater, Context context, int localUid, HashMap<Integer, SurfaceView> uids) {
+        mInflater = inflater;
+        mContext = context;
 
         mLocalUid = localUid;
 

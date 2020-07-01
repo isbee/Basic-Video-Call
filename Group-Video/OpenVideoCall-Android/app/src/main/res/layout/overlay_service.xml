@@ -11,7 +11,7 @@
         android:id="@+id/textView" />
 
     <io.agora.openvcall.ui.layout.GridVideoViewContainer
-        android:id="@+id/grid_video_view_container"
+        android:id="@+id/overlay_grid_video_view_container"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 

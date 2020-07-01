@@ -7,6 +7,7 @@ import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import android.util.AttributeSet;
+import android.view.LayoutInflater;
 import android.view.SurfaceView;
 
 import org.slf4j.Logger;
@@ -40,17 +41,17 @@ public class GridVideoViewContainer extends RecyclerView {
         this.addOnItemTouchListener(new RecyclerItemClickListener(getContext(), listener));
     }
 
-    private boolean initAdapter(Activity activity, int localUid, HashMap<Integer, SurfaceView> uids) {
+    private boolean initAdapter(LayoutInflater inflater, Context context, int localUid, HashMap<Integer, SurfaceView> uids) {
         if (mGridVideoViewContainerAdapter == null) {
-            mGridVideoViewContainerAdapter = new GridVideoViewContainerAdapter(activity, localUid, uids);
+            mGridVideoViewContainerAdapter = new GridVideoViewContainerAdapter(inflater, context, localUid, uids);
             mGridVideoViewContainerAdapter.setHasStableIds(true);
             return true;
         }
         return false;
     }
 
-    public void initViewContainer(Activity activity, int localUid, HashMap<Integer, SurfaceView> uids, boolean isLandscape) {
-        boolean newCreated = initAdapter(activity, localUid, uids);
+    public void initViewContainer(LayoutInflater inflater, Context context, int localUid, HashMap<Integer, SurfaceView> uids, boolean isLandscape) {
+        boolean newCreated = initAdapter(inflater, context, localUid, uids);
 
         if (!newCreated) {
             mGridVideoViewContainerAdapter.setLocalUid(localUid);
@@ -63,10 +64,10 @@ public class GridVideoViewContainer extends RecyclerView {
 
         int count = uids.size();
         if (count <= 2) { // only local full view or or with one peer
-            this.setLayoutManager(new LinearLayoutManager(activity.getApplicationContext(), orientation, false));
+            this.setLayoutManager(new LinearLayoutManager(context, orientation, false));
         } else if (count > 2) {
             int itemSpanCount = getNearestSqrt(count);
-            this.setLayoutManager(new GridLayoutManager(activity.getApplicationContext(), itemSpanCount, orientation, false));
+            this.setLayoutManager(new GridLayoutManager(context, itemSpanCount, orientation, false));
         }
 
         mGridVideoViewContainerAdapter.notifyDataSetChanged();

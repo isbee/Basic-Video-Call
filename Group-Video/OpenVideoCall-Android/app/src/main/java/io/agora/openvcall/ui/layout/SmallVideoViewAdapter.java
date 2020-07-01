@@ -3,6 +3,7 @@ package io.agora.openvcall.ui.layout;
 import android.app.Activity;
 import android.content.Context;
 import android.util.DisplayMetrics;
+import android.view.LayoutInflater;
 import android.view.SurfaceView;
 import android.view.WindowManager;
 
@@ -17,8 +18,8 @@ public class SmallVideoViewAdapter extends VideoViewAdapter {
 
     private int mExceptedUid;
 
-    public SmallVideoViewAdapter(Activity activity, int localUid, int exceptedUid, HashMap<Integer, SurfaceView> uids) {
-        super(activity, localUid, uids);
+    public SmallVideoViewAdapter(LayoutInflater inflater, Context context, int localUid, int exceptedUid, HashMap<Integer, SurfaceView> uids) {
+        super(inflater, context, localUid, uids);
         mExceptedUid = exceptedUid;
         log.debug("SmallVideoViewAdapter " + (mLocalUid & 0xFFFFFFFFL) + " " + (mExceptedUid & 0xFFFFFFFFL));
     }

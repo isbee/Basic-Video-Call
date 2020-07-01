@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Context;
 import androidx.recyclerview.widget.RecyclerView;
 import android.util.DisplayMetrics;
+import android.view.LayoutInflater;
 import android.view.SurfaceView;
 import android.view.ViewGroup;
 import android.view.WindowManager;
@@ -19,8 +20,8 @@ public class GridVideoViewContainerAdapter extends VideoViewAdapter {
 
     private final static Logger log = LoggerFactory.getLogger(GridVideoViewContainerAdapter.class);
 
-    public GridVideoViewContainerAdapter(Activity activity, int localUid, HashMap<Integer, SurfaceView> uids) {
-        super(activity, localUid, uids);
+    public GridVideoViewContainerAdapter(LayoutInflater inflater, Context context, int localUid, HashMap<Integer, SurfaceView> uids) {
+        super(inflater, context, localUid, uids);
         log.debug("GridVideoViewContainerAdapter " + (mLocalUid & 0xFFFFFFFFL));
     }
 
