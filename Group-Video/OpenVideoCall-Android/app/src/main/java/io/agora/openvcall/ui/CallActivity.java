@@ -1,6 +1,9 @@
 package io.agora.openvcall.ui;
 
+import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.media.AudioManager;
@@ -8,6 +11,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.IBinder;
 import android.preference.PreferenceManager;
 import androidx.appcompat.app.ActionBar;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -89,6 +93,18 @@ public class CallActivity extends BaseActivity implements DuringCallEventHandler
     private SmallVideoViewAdapter mSmallVideoViewAdapter;
 
     private final Handler mUIHandler = new Handler();
+
+    private final ServiceConnection serviceConn = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -323,14 +339,14 @@ public class CallActivity extends BaseActivity implements DuringCallEventHandler
         System.out.println("hi");
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {   // 마시멜로우 이상일 경우
             if (Settings.canDrawOverlays(this)) {
-                startService(new Intent(CallActivity.this, OverlayService.class));
+                bindService(new Intent(CallActivity.this, OverlayService.class), serviceConn, Context.BIND_AUTO_CREATE);
             } else {
                 Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
                         Uri.parse("package:" + getPackageName()));// 체크
                 startActivityForResult(intent, ACTION_MANAGE_OVERLAY_PERMISSION_REQUEST_CODE);
             }
         } else {
-            startService(new Intent(CallActivity.this, OverlayService.class));
+            bindService(new Intent(CallActivity.this, OverlayService.class), serviceConn, Context.BIND_AUTO_CREATE);
         }
     }
 
