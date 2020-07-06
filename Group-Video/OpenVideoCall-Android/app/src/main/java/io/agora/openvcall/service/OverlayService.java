@@ -21,13 +21,16 @@ import android.view.SurfaceView;
 import android.view.View;
 import android.view.ViewConfiguration;
 import android.view.ViewGroup;
+import android.view.ViewStub;
 import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.recyclerview.widget.RecyclerView;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -78,8 +81,8 @@ public class OverlayService extends Service {
         wm = (WindowManager) getSystemService(WINDOW_SERVICE);
 
         WindowManager.LayoutParams params = new WindowManager.LayoutParams(
-                /*ViewGroup.LayoutParams.MATCH_PARENT*/300,
-                ViewGroup.LayoutParams.WRAP_CONTENT,
+                300,
+                300,
                 WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
                 WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
                         |WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH,

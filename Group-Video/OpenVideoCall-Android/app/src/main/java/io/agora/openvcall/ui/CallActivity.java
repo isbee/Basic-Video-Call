@@ -336,12 +336,12 @@ public class CallActivity extends BaseActivity implements DuringCallEventHandler
 
     public void onClickOverlay(View view) {
         System.out.println("hi");
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {   // 마시멜로우 이상일 경우
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {   // 마시멜로우 이상일 경우 overlay 권한 필요
             if (Settings.canDrawOverlays(this)) {
                 bindService(new Intent(CallActivity.this, OverlayService.class), serviceConn, Context.BIND_AUTO_CREATE);
             } else {
                 Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-                        Uri.parse("package:" + getPackageName()));// 체크
+                        Uri.parse("package:" + getPackageName()));
                 startActivityForResult(intent, ACTION_MANAGE_OVERLAY_PERMISSION_REQUEST_CODE);
             }
         } else {
