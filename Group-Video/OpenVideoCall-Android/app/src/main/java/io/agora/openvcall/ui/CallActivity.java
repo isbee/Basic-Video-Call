@@ -42,7 +42,6 @@ import io.agora.openvcall.R;
 import io.agora.openvcall.model.AGEventHandler;
 import io.agora.openvcall.model.ConstantApp;
 import io.agora.openvcall.model.DuringCallEventHandler;
-import io.agora.openvcall.model.EngineConfig;
 import io.agora.openvcall.model.Message;
 import io.agora.openvcall.model.User;
 import io.agora.openvcall.service.OverlayService;

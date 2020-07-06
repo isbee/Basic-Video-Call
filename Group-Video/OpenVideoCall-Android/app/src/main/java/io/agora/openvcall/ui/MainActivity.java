@@ -2,11 +2,9 @@ package io.agora.openvcall.ui;
 
 import android.content.Intent;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import androidx.appcompat.app.ActionBar;
 
-import android.provider.Settings;
 import android.text.Editable;
 import android.text.Html;
 import android.text.TextUtils;
@@ -30,15 +28,11 @@ import org.slf4j.LoggerFactory;
 
 import io.agora.openvcall.R;
 import io.agora.openvcall.model.ConstantApp;
-import io.agora.openvcall.service.OverlayService;
 
 public class MainActivity extends BaseActivity {
 
-    public static int ACTION_MANAGE_OVERLAY_PERMISSION_REQUEST_CODE = 2323;
-
     private final static Logger log = LoggerFactory.getLogger(MainActivity.class);
 
-    static final String TEMP_CHANNEL_ID = "test";
     static final String uri = "https://facechatoverlay.com";  // manifest의 intent filter에 정의한 host와 동일
     static final String uriPrefix = "https://facechatoverlay.page.link";  // firebase에서 제공하는 무료 도메인 사용
 
@@ -143,12 +137,29 @@ public class MainActivity extends BaseActivity {
     }
 
     public void onClickInvite(View view) {
+        setDynamicLinkAndForwardToRoom();
+    }
+
+    public void setDynamicLinkAndForwardToRoom() {
+        EditText v_channel = (EditText) findViewById(R.id.channel_name);
+        String channel = v_channel.getText().toString();
+        vSettings().mChannelName = channel;
+
         DynamicLink dynamicLink = buildDynamicLink(uri, uriPrefix);
 
-        Uri dynamicLinkUriWithChannelId = getDynamicLinkUriWithChannelId(dynamicLink, TEMP_CHANNEL_ID);
+        Uri dynamicLinkUriWithChannelId = getDynamicLinkUriWithChannelId(dynamicLink, channel);
         appLinkView.setText(Html.fromHtml(dynamicLinkUriWithChannelId.toString()));
 
-        forwardToRoom();
+        EditText v_encryption_key = (EditText) findViewById(R.id.encryption_key);
+        String encryption = v_encryption_key.getText().toString();
+        vSettings().mEncryptionKey = encryption;
+
+        Intent i = new Intent(MainActivity.this, CallActivity.class);
+        i.putExtra(ConstantApp.ACTION_KEY_CHANNEL_NAME, channel);
+        i.putExtra(ConstantApp.ACTION_KEY_ENCRYPTION_KEY, encryption);
+        i.putExtra(ConstantApp.ACTION_KEY_ENCRYPTION_MODE, getResources().getStringArray(R.array.encryption_mode_values)[vSettings().mEncryptionModeIndex]);
+
+        startActivity(i);
     }
 
     public void forwardToRoom() {
