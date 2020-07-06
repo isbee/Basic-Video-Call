@@ -41,8 +41,8 @@ public abstract class VideoViewAdapter extends RecyclerView.Adapter<RecyclerView
         init(uids);
     }
 
-    protected int mItemWidth;
-    protected int mItemHeight;
+    public int mItemWidth;
+    public int mItemHeight;
 
     private int mDefaultChildItem = 0;
 

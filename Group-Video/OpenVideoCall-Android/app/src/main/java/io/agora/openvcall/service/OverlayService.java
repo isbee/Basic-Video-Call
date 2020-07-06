@@ -1,47 +1,25 @@
 package io.agora.openvcall.service;
 
-import android.Manifest;
-import android.app.Activity;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageManager;
-import android.content.res.TypedArray;
 import android.graphics.PixelFormat;
-import android.os.Build;
-import android.os.Bundle;
-import android.os.Handler;
 import android.os.IBinder;
 import android.text.TextUtils;
-import android.util.DisplayMetrics;
-import android.view.Display;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.SurfaceView;
 import android.view.View;
-import android.view.ViewConfiguration;
-import android.view.ViewGroup;
-import android.view.ViewStub;
 import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
-import android.widget.RelativeLayout;
-import android.widget.Toast;
-
-import androidx.annotation.NonNull;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
-import androidx.recyclerview.widget.RecyclerView;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Arrays;
 import java.util.HashMap;
 
 import io.agora.openvcall.AGApplication;
 import io.agora.openvcall.R;
 import io.agora.openvcall.model.AGEventHandler;
-import io.agora.openvcall.model.ConstantApp;
 import io.agora.openvcall.model.CurrentUserSettings;
 import io.agora.openvcall.model.EngineConfig;
 import io.agora.openvcall.model.RtcChannelToken;
@@ -102,6 +80,8 @@ public class OverlayService extends Service {
         mUidsList.put(0, surfaceV); // get first surface view
 
         mGridVideoViewContainer.initViewContainer(inflate, this, 0, mUidsList, mIsLandscape); // first is now full view
+        mGridVideoViewContainer.mGridVideoViewContainerAdapter.mItemWidth = 300;
+        mGridVideoViewContainer.mGridVideoViewContainerAdapter.mItemHeight = 300;
     }
 
     @Override

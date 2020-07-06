@@ -22,7 +22,7 @@ public class GridVideoViewContainer extends RecyclerView {
 
     private final static Logger log = LoggerFactory.getLogger(GridVideoViewContainer.class);
 
-    private GridVideoViewContainerAdapter mGridVideoViewContainerAdapter;
+    public GridVideoViewContainerAdapter mGridVideoViewContainerAdapter;
 
     public GridVideoViewContainer(Context context) {
         super(context);
