@@ -321,11 +321,14 @@ public abstract class BaseActivity extends AppCompatActivity {
             @Override
             public void onResponse(Call<RtcChannelToken> call, Response<RtcChannelToken> response) {
                 RtcChannelToken token = response.body();
-
-                rtcEngine().joinChannel(token.getToken(), channel, "OpenVCall", uid);
-                config().mChannel = channel;
-                enablePreProcessor();
-                log.debug("joinChannel " + channel + " " + uid);
+                if (token != null) {
+                    rtcEngine().joinChannel(token.getToken(), channel, "OpenVCall", uid);
+                    config().mChannel = channel;
+                    enablePreProcessor();
+                    log.debug("joinChannel " + channel + " " + uid);
+                } else {
+                    System.out.println("Token is null. response:" + response.toString());
+                }
             }
 
             @Override
