@@ -10,7 +10,9 @@ public class ConstantApp {
     public static final int PERMISSION_REQ_ID_RECORD_AUDIO = BASE_VALUE_PERMISSION + 1;
     public static final int PERMISSION_REQ_ID_CAMERA = BASE_VALUE_PERMISSION + 2;
     public static final int PERMISSION_REQ_ID_WRITE_EXTERNAL_STORAGE = BASE_VALUE_PERMISSION + 3;
-    public static final int PERMISSION_REQ_ID_READ_CONTACTS = BASE_VALUE_PERMISSION + 10;
+    public static final int PERMISSION_REQ_ID_READ_CONTACTS = BASE_VALUE_PERMISSION + 4;
+    public static final int PERMISSION_REQ_ID_SEND_SMS = BASE_VALUE_PERMISSION + 5;
+    public static final int PERMISSION_REQ_ID_READ_PHONE_STATE = BASE_VALUE_PERMISSION + 6;
 
     public static final int MAX_PEER_COUNT = 4;
 

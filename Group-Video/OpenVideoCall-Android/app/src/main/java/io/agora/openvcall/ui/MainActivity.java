@@ -8,6 +8,7 @@ import android.os.Bundle;
 import androidx.appcompat.app.ActionBar;
 
 import android.provider.ContactsContract;
+import android.telephony.SmsManager;
 import android.text.Editable;
 import android.text.Html;
 import android.text.TextUtils;
@@ -193,6 +194,9 @@ public class MainActivity extends BaseActivity {
             }
 
             appLinkView.setText(phone);
+
+            SmsManager smsmanage = SmsManager.getDefault();
+            smsmanage.sendTextMessage(phone, null, "hello!!", null, null);
         }
     }
 
