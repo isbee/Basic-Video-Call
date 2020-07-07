@@ -196,7 +196,12 @@ public class MainActivity extends BaseActivity {
             appLinkView.setText(phone);
 
             SmsManager smsmanage = SmsManager.getDefault();
-            smsmanage.sendTextMessage(phone, null, "hello!!", null, null);
+            DynamicLink dynamicLink = buildDynamicLink(uri, uriPrefix);
+            EditText v_channel = (EditText) findViewById(R.id.channel_name);
+            String channel = v_channel.getText().toString();
+            vSettings().mChannelName = channel;
+            Uri dynamicLinkUriWithChannelId = getDynamicLinkUriWithChannelId(dynamicLink, channel);
+            smsmanage.sendTextMessage(phone, null, dynamicLinkUriWithChannelId.toString(), null, null);
         }
     }
 
