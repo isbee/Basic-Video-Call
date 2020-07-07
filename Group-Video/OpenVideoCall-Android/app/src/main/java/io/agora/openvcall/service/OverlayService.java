@@ -8,10 +8,13 @@ import android.os.IBinder;
 import android.text.TextUtils;
 import android.view.Gravity;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.SurfaceView;
 import android.view.View;
 import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.RelativeLayout;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,7 +38,7 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class OverlayService extends Service {
+public class OverlayService extends Service implements View.OnTouchListener {
 
     private final static Logger log = LoggerFactory.getLogger(CallActivity.class);
 
@@ -43,6 +46,9 @@ public class OverlayService extends Service {
     // should only be modified under UI thread
     private final HashMap<Integer, SurfaceView> mUidsList = new HashMap<>(); // uid = 0 || uid == EngineConfig.mUid
     private boolean mIsLandscape = false;
+
+    private int _xDelta;
+    private int _yDelta;
 
     WindowManager wm;
     View mView;
@@ -63,14 +69,21 @@ public class OverlayService extends Service {
                 300,
                 WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
                 WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
-                        |WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH,
+                        |WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH
+                        | WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL,
                 PixelFormat.TRANSLUCENT);
 
         params.gravity = Gravity.LEFT | Gravity.TOP;
-        mView = inflate.inflate(R.layout.overlay_service, null);
-        wm.addView(mView, params);
+//        mView = inflate.inflate(R.layout.overlay_service, null);
+        RelativeLayout overlayView = new RelativeLayout(getApplicationContext());
+//        overlayView.setOnTouchListener(this);
+//        wm.addView(overlayView, params);
 
-        mGridVideoViewContainer = (GridVideoViewContainer) mView.findViewById(R.id.overlay_grid_video_view_container);
+        mGridVideoViewContainer = new GridVideoViewContainer(getApplicationContext());
+        mGridVideoViewContainer.setOnTouchListener(this);
+        overlayView.addView(mGridVideoViewContainer);
+        mView = inflate.inflate(R.layout.overlay_service, overlayView);
+        wm.addView(mView, params);
 
         SurfaceView surfaceV = RtcEngine.CreateRendererView(getApplicationContext());
         preview(true, surfaceV, 0);
@@ -83,6 +96,35 @@ public class OverlayService extends Service {
         mGridVideoViewContainer.mGridVideoViewContainerAdapter.mItemWidth = 300;
         mGridVideoViewContainer.mGridVideoViewContainerAdapter.mItemHeight = 300;
     }
+
+    @Override
+    public boolean onTouch(View view, MotionEvent event) {
+        System.out.println("how>");
+        final int X = (int) event.getRawX();
+        final int Y = (int) event.getRawY();
+        switch (event.getAction() & MotionEvent.ACTION_MASK) {
+            case MotionEvent.ACTION_DOWN:
+                WindowManager.LayoutParams lParams = (WindowManager.LayoutParams) mView.getLayoutParams();
+                _xDelta = X - lParams.x;
+                _yDelta = Y - lParams.y;
+                break;
+            case MotionEvent.ACTION_UP:
+                break;
+            case MotionEvent.ACTION_POINTER_DOWN:
+                break;
+            case MotionEvent.ACTION_POINTER_UP:
+                break;
+            case MotionEvent.ACTION_MOVE:
+                WindowManager.LayoutParams layoutParams = (WindowManager.LayoutParams) mView.getLayoutParams();
+                layoutParams.x = X - _xDelta;
+                layoutParams.y = Y - _yDelta;
+//                view.setLayoutParams(layoutParams);
+                wm.updateViewLayout(mView, layoutParams);
+                break;
+        }
+        return true;
+    }
+
 
     @Override
     public void onDestroy() {
