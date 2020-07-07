@@ -1,10 +1,13 @@
 package io.agora.openvcall.ui;
 
 import android.content.Intent;
+import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
+
 import androidx.appcompat.app.ActionBar;
 
+import android.provider.ContactsContract;
 import android.text.Editable;
 import android.text.Html;
 import android.text.TextUtils;
@@ -25,6 +28,8 @@ import com.google.firebase.dynamiclinks.FirebaseDynamicLinks;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.net.URI;
 
 import io.agora.openvcall.R;
 import io.agora.openvcall.model.ConstantApp;
@@ -137,7 +142,58 @@ public class MainActivity extends BaseActivity {
     }
 
     public void onClickInvite(View view) {
-        setDynamicLinkAndForwardToRoom();
+        Intent intent = new Intent(Intent.ACTION_PICK);
+        intent.setData(ContactsContract.Contacts.CONTENT_URI);
+        startActivityForResult(intent, 10);
+//        setDynamicLinkAndForwardToRoom();
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == 10 && resultCode == RESULT_OK) {
+            String result = data.getDataString();
+
+            String id = "";
+            String name = "";
+            String phone = "";
+            int idx;
+            Cursor cursor = getContentResolver().query(Uri.parse(result), null, null, null, null);
+            if (cursor.moveToFirst()) {
+                idx = cursor.getColumnIndex(ContactsContract.Contacts._ID);
+                id = cursor.getString(idx);
+
+                idx = cursor.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME);
+                name = cursor.getString(idx);
+            }
+
+            // Build the Entity URI.
+            Uri.Builder b = Uri.withAppendedPath(ContactsContract.Contacts.CONTENT_URI, id).buildUpon();
+            b.appendPath(ContactsContract.Contacts.Entity.CONTENT_DIRECTORY);
+            Uri contactUri = b.build();
+
+// Create the projection (SQL fields) and sort order.
+            String[] projection = {
+                    ContactsContract.Contacts.Entity.RAW_CONTACT_ID,
+                    ContactsContract.Contacts.Entity.DATA1,
+                    ContactsContract.Contacts.Entity.MIMETYPE };
+            String sortOrder = ContactsContract.Contacts.Entity.RAW_CONTACT_ID + " ASC";
+            cursor = getContentResolver().query(contactUri, projection, null, null, sortOrder);
+
+            String mime;
+            int mimeIdx = cursor.getColumnIndex(ContactsContract.Contacts.Entity.MIMETYPE);
+            int dataIdx = cursor.getColumnIndex(ContactsContract.Contacts.Entity.DATA1);
+            if (cursor.moveToFirst()) {
+                do {
+                    mime = cursor.getString(mimeIdx);
+                    if (mime.equalsIgnoreCase(ContactsContract.CommonDataKinds.Phone.CONTENT_ITEM_TYPE)) {
+                        phone = cursor.getString(dataIdx);
+                    }
+                    // ...etc.
+                } while (cursor.moveToNext());
+            }
+
+            appLinkView.setText(phone);
+        }
     }
 
     public void setDynamicLinkAndForwardToRoom() {
