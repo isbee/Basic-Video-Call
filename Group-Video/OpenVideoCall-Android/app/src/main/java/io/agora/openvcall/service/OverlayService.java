@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.graphics.PixelFormat;
 import android.os.IBinder;
 import android.text.TextUtils;
+import android.view.GestureDetector;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -13,6 +14,8 @@ import android.view.SurfaceView;
 import android.view.View;
 import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.EditText;
+import android.widget.OverScroller;
 import android.widget.RelativeLayout;
 
 import org.slf4j.Logger;
@@ -23,12 +26,14 @@ import java.util.HashMap;
 import io.agora.openvcall.AGApplication;
 import io.agora.openvcall.R;
 import io.agora.openvcall.model.AGEventHandler;
+import io.agora.openvcall.model.ConstantApp;
 import io.agora.openvcall.model.CurrentUserSettings;
 import io.agora.openvcall.model.EngineConfig;
 import io.agora.openvcall.model.RtcChannelToken;
 import io.agora.openvcall.model.RtcChannelTokenService;
 import io.agora.openvcall.model.RtcChannelTokenServiceClient;
 import io.agora.openvcall.ui.CallActivity;
+import io.agora.openvcall.ui.MainActivity;
 import io.agora.openvcall.ui.layout.GridVideoViewContainer;
 import io.agora.propeller.Constant;
 import io.agora.rtc.RtcEngine;
@@ -50,6 +55,8 @@ public class OverlayService extends Service implements View.OnTouchListener {
     private int _xDelta;
     private int _yDelta;
 
+    private GestureDetector gestureDetector;
+
     WindowManager wm;
     View mView;
 
@@ -61,8 +68,10 @@ public class OverlayService extends Service implements View.OnTouchListener {
     @Override
     public void onCreate() {
         super.onCreate();
+        CallActivity.isOverlayServiceRunnging = true;
         LayoutInflater inflate = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         wm = (WindowManager) getSystemService(WINDOW_SERVICE);
+        gestureDetector = new GestureDetector(this, new SingleTapConfirm());
 
         WindowManager.LayoutParams params = new WindowManager.LayoutParams(
                 300,
@@ -99,6 +108,13 @@ public class OverlayService extends Service implements View.OnTouchListener {
 
     @Override
     public boolean onTouch(View view, MotionEvent event) {
+        if (gestureDetector.onTouchEvent(event)) {
+            System.out.println("Click");
+            forwardToRoom();
+            wm.removeView(mView);
+            return true;
+        }
+
         System.out.println("how>");
         final int X = (int) event.getRawX();
         final int Y = (int) event.getRawY();
@@ -125,10 +141,11 @@ public class OverlayService extends Service implements View.OnTouchListener {
         return true;
     }
 
-
     @Override
     public void onDestroy() {
         super.onDestroy();
+        System.out.println("overlay service onDestroy");
+        CallActivity.isOverlayServiceRunnging = false;
         if(wm != null) {
             if(mView != null) {
                 wm.removeView(mView);
@@ -136,6 +153,20 @@ public class OverlayService extends Service implements View.OnTouchListener {
             }
             wm = null;
         }
+    }
+
+    public void forwardToRoom() {
+        String channel = vSettings().mChannelName;
+        String encryption = vSettings().mEncryptionKey;
+
+        Intent i = new Intent(OverlayService.this, CallActivity.class);
+        i.putExtra(ConstantApp.ACTION_KEY_CHANNEL_NAME, channel);
+        i.putExtra(ConstantApp.ACTION_KEY_ENCRYPTION_KEY, encryption);
+        i.putExtra(ConstantApp.ACTION_KEY_ENCRYPTION_MODE, getResources().getStringArray(R.array.encryption_mode_values)[vSettings().mEncryptionModeIndex]);
+        i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        i.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+
+        startActivity(i);
     }
 
     protected void permissionGranted() {
@@ -305,5 +336,13 @@ public class OverlayService extends Service implements View.OnTouchListener {
                 fps,
                 VideoEncoderConfiguration.STANDARD_BITRATE,
                 VideoEncoderConfiguration.ORIENTATION_MODE.ORIENTATION_MODE_FIXED_PORTRAIT));
+    }
+
+    private static class SingleTapConfirm extends GestureDetector.SimpleOnGestureListener {
+
+        @Override
+        public boolean onSingleTapUp(MotionEvent event) {
+            return true;
+        }
     }
 }

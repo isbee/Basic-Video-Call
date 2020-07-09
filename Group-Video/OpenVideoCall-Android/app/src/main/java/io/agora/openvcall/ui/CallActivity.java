@@ -71,6 +71,8 @@ import io.agora.rtc.video.VideoEncoderConfiguration;
 
 public class CallActivity extends BaseActivity implements DuringCallEventHandler {
 
+    public static boolean isOverlayServiceRunnging;
+
     private static final int ACTION_MANAGE_OVERLAY_PERMISSION_REQUEST_CODE = 1;
 
     public static final int LAYOUT_TYPE_DEFAULT = 0;
@@ -101,17 +103,22 @@ public class CallActivity extends BaseActivity implements DuringCallEventHandler
 
     private final Handler mUIHandler = new Handler();
 
-    private final ServiceConnection serviceConn = new ServiceConnection() {
-        @Override
-        public void onServiceConnected(ComponentName name, IBinder service) {
+    private final ServiceConnection serviceConn = serviceConn();
 
-        }
+    private ServiceConnection serviceConn() {
+        ServiceConnection serviceConn = new ServiceConnection() {
+            @Override
+            public void onServiceConnected(ComponentName name, IBinder service) {
 
-        @Override
-        public void onServiceDisconnected(ComponentName name) {
+            }
 
-        }
-    };
+            @Override
+            public void onServiceDisconnected(ComponentName name) {
+
+            }
+        };
+        return serviceConn;
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -152,6 +159,7 @@ public class CallActivity extends BaseActivity implements DuringCallEventHandler
                         Log.w(CallActivity.this.toString(), "getDynamicLink:onFailure", e);
                     }
                 });
+         isOverlayServiceRunnging = false;
     }
 
     @Override
@@ -426,6 +434,10 @@ public class CallActivity extends BaseActivity implements DuringCallEventHandler
 
     public void onClickOverlay(View view) {
         System.out.println("hi");
+        if (isOverlayServiceRunnging) {
+            unbindService(serviceConn);
+        }
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {   // 마시멜로우 이상일 경우 overlay 권한 필요
             if (Settings.canDrawOverlays(this)) {
                 bindService(new Intent(CallActivity.this, OverlayService.class), serviceConn, Context.BIND_AUTO_CREATE);
