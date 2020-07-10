@@ -91,3 +91,7 @@ Or use `Gradle` to build and run.
 ## License
 
 The MIT License (MIT)
+
+## 개발 과정에서의 이슈
+
+1. 일부 디바이스에서 example.page.link(dynamic link에 사용되는 도메인)을 url로 인식을 못해서 추가적으로 단축 url 서비스를 사용해야 했음
