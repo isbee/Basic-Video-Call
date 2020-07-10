@@ -44,8 +44,8 @@ public class MainActivity extends BaseActivity {
 
     private final static Logger log = LoggerFactory.getLogger(MainActivity.class);
 
-    static final String uri = "https://facechatoverlay.com";  // manifest의 intent filter에 정의한 host와 동일
-    static final String uriPrefix = "https://facechatoverlay.page.link";  // firebase에서 제공하는 무료 도메인 사용
+    static final String uri = "http://facechatoverlay.com";  // manifest의 intent filter에 정의한 host와 동일
+    static final String uriPrefix = "http://facechatoverlay.page.link";  // firebase에서 제공하는 무료 도메인 사용
 
     private TextView appLinkView;
 
@@ -152,6 +152,7 @@ public class MainActivity extends BaseActivity {
         intent.setData(ContactsContract.Contacts.CONTENT_URI);
         startActivityForResult(intent, 10);
 //        setDynamicLinkAndForwardToRoom();
+//        buildShortDynamicLink(uri, uriPrefix);
     }
 
     @Override
@@ -275,6 +276,33 @@ public class MainActivity extends BaseActivity {
 //                .setIosParameters(new DynamicLink.IosParameters.Builder("com.example.ios").build())
                 .buildDynamicLink();
         return dynamicLink;
+    }
+
+    private void buildShortDynamicLink(String uri, String uriPrefix) {
+        Task<ShortDynamicLink> shortLinkTask = FirebaseDynamicLinks.getInstance().createDynamicLink()
+                .setLink(Uri.parse(uri))
+                .setDomainUriPrefix(uriPrefix)
+                // Open links with this app on Android
+                .setAndroidParameters(new DynamicLink.AndroidParameters.Builder(BuildConfig.APPLICATION_ID).setMinimumVersion(16).build())
+                // Open links with com.example.ios on iOS
+//                .setIosParameters(new DynamicLink.IosParameters.Builder("com.example.ios").build())
+                .buildShortDynamicLink()
+                .addOnCompleteListener(this, new OnCompleteListener<ShortDynamicLink>() {
+                    @Override
+                    public void onComplete(@NonNull Task<ShortDynamicLink> task) {
+                        if (task.isSuccessful()) {
+                            // Short link created
+                            Uri shortLink = task.getResult().getShortLink();
+                            EditText v_channel = (EditText) findViewById(R.id.channel_name);
+                            String channel = v_channel.getText().toString();
+                            vSettings().mChannelName = channel;
+                            appLinkView.setText(Html.fromHtml(shortLink.toString()));
+                        } else {
+                            // Error
+                            // ...
+                        }
+                    }
+                });
     }
 
     private void buildShortDynamicLinkAndSendMessage(String uri, String uriPrefix, SmsManager smsManager, String phone) {
