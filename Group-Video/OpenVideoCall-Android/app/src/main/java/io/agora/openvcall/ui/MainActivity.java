@@ -39,13 +39,22 @@ import java.net.URI;
 import io.agora.openvcall.BuildConfig;
 import io.agora.openvcall.R;
 import io.agora.openvcall.model.ConstantApp;
+import io.agora.openvcall.model.RtcChannelToken;
+import io.agora.openvcall.model.RtcChannelTokenService;
+import io.agora.openvcall.model.RtcChannelTokenServiceClient;
+import io.agora.openvcall.model.ShortenUrl;
+import io.agora.openvcall.model.ShortenUrlService;
+import io.agora.openvcall.model.ShortenUrlServiceClient;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class MainActivity extends BaseActivity {
 
     private final static Logger log = LoggerFactory.getLogger(MainActivity.class);
 
-    static final String uri = "http://facechatoverlay.com";  // manifest의 intent filter에 정의한 host와 동일
-    static final String uriPrefix = "http://facechatoverlay.page.link";  // firebase에서 제공하는 무료 도메인 사용
+    static final String uri = "https://facechatoverlay.com";  // manifest의 intent filter에 정의한 host와 동일
+    static final String uriPrefix = "https://facechatoverlay.page.link";  // firebase에서 제공하는 무료 도메인 사용
 
     private TextView appLinkView;
 
@@ -152,7 +161,6 @@ public class MainActivity extends BaseActivity {
         intent.setData(ContactsContract.Contacts.CONTENT_URI);
         startActivityForResult(intent, 10);
 //        setDynamicLinkAndForwardToRoom();
-//        buildShortDynamicLink(uri, uriPrefix);
     }
 
     @Override
@@ -202,13 +210,14 @@ public class MainActivity extends BaseActivity {
             appLinkView.setText(phone);
 
             SmsManager smsmanage = SmsManager.getDefault();
-//            DynamicLink dynamicLink = buildDynamicLink(uri, uriPrefix);
-//            EditText v_channel = (EditText) findViewById(R.id.channel_name);
-//            String channel = v_channel.getText().toString();
-//            vSettings().mChannelName = channel;
-//            Uri dynamicLinkUriWithChannelId = getDynamicLinkUriWithChannelId(dynamicLink, channel);
+            DynamicLink dynamicLink = buildDynamicLink(uri, uriPrefix);
+            EditText v_channel = (EditText) findViewById(R.id.channel_name);
+            String channel = v_channel.getText().toString();
+            vSettings().mChannelName = channel;
+            Uri dynamicLinkUriWithChannelId = getDynamicLinkUriWithChannelId(dynamicLink, channel);
+            getShortUrlAndSendMessage(dynamicLinkUriWithChannelId.toString(), smsmanage, phone);
 //            smsmanage.sendTextMessage(phone, null, dynamicLinkUriWithChannelId.toString(), null, null);
-            buildShortDynamicLinkAndSendMessage(uri, uriPrefix, smsmanage, phone);
+//            buildShortDynamicLinkAndSendMessage(uri, uriPrefix, smsmanage, phone);
         }
     }
 
@@ -278,31 +287,25 @@ public class MainActivity extends BaseActivity {
         return dynamicLink;
     }
 
-    private void buildShortDynamicLink(String uri, String uriPrefix) {
-        Task<ShortDynamicLink> shortLinkTask = FirebaseDynamicLinks.getInstance().createDynamicLink()
-                .setLink(Uri.parse(uri))
-                .setDomainUriPrefix(uriPrefix)
-                // Open links with this app on Android
-                .setAndroidParameters(new DynamicLink.AndroidParameters.Builder(BuildConfig.APPLICATION_ID).setMinimumVersion(16).build())
-                // Open links with com.example.ios on iOS
-//                .setIosParameters(new DynamicLink.IosParameters.Builder("com.example.ios").build())
-                .buildShortDynamicLink()
-                .addOnCompleteListener(this, new OnCompleteListener<ShortDynamicLink>() {
-                    @Override
-                    public void onComplete(@NonNull Task<ShortDynamicLink> task) {
-                        if (task.isSuccessful()) {
-                            // Short link created
-                            Uri shortLink = task.getResult().getShortLink();
-                            EditText v_channel = (EditText) findViewById(R.id.channel_name);
-                            String channel = v_channel.getText().toString();
-                            vSettings().mChannelName = channel;
-                            appLinkView.setText(Html.fromHtml(shortLink.toString()));
-                        } else {
-                            // Error
-                            // ...
-                        }
-                    }
-                });
+    private void getShortUrlAndSendMessage(String uri, SmsManager smsManager, String phone) {
+        ShortenUrlService shortenUrlService = ShortenUrlServiceClient.getClient();
+        // TODO channelId 문자로 받을 것
+        shortenUrlService.getShortenUrl("json", uri).enqueue(new Callback<ShortenUrl>() {
+            @Override
+            public void onResponse(Call<ShortenUrl> call, Response<ShortenUrl> response) {
+                ShortenUrl shortenUrl = response.body();
+                if (shortenUrl != null) {
+                    smsManager.sendTextMessage(phone, null, shortenUrl.getShortUrl(), null, null);
+                } else {
+                    System.out.println("Token is null. response:" + response.toString());
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ShortenUrl> call, Throwable t) {
+                System.out.println("getShortenUrl Failed");
+            }
+        });
     }
 
     private void buildShortDynamicLinkAndSendMessage(String uri, String uriPrefix, SmsManager smsManager, String phone) {
