@@ -5,6 +5,7 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBar;
 
 import android.provider.ContactsContract;
@@ -24,14 +25,18 @@ import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.TextView;
 
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.dynamiclinks.DynamicLink;
 import com.google.firebase.dynamiclinks.FirebaseDynamicLinks;
+import com.google.firebase.dynamiclinks.ShortDynamicLink;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.URI;
 
+import io.agora.openvcall.BuildConfig;
 import io.agora.openvcall.R;
 import io.agora.openvcall.model.ConstantApp;
 
@@ -196,12 +201,13 @@ public class MainActivity extends BaseActivity {
             appLinkView.setText(phone);
 
             SmsManager smsmanage = SmsManager.getDefault();
-            DynamicLink dynamicLink = buildDynamicLink(uri, uriPrefix);
-            EditText v_channel = (EditText) findViewById(R.id.channel_name);
-            String channel = v_channel.getText().toString();
-            vSettings().mChannelName = channel;
-            Uri dynamicLinkUriWithChannelId = getDynamicLinkUriWithChannelId(dynamicLink, channel);
-            smsmanage.sendTextMessage(phone, null, dynamicLinkUriWithChannelId.toString(), null, null);
+//            DynamicLink dynamicLink = buildDynamicLink(uri, uriPrefix);
+//            EditText v_channel = (EditText) findViewById(R.id.channel_name);
+//            String channel = v_channel.getText().toString();
+//            vSettings().mChannelName = channel;
+//            Uri dynamicLinkUriWithChannelId = getDynamicLinkUriWithChannelId(dynamicLink, channel);
+//            smsmanage.sendTextMessage(phone, null, dynamicLinkUriWithChannelId.toString(), null, null);
+            buildShortDynamicLinkAndSendMessage(uri, uriPrefix, smsmanage, phone);
         }
     }
 
@@ -264,15 +270,51 @@ public class MainActivity extends BaseActivity {
                 .setLink(Uri.parse(uri))
                 .setDomainUriPrefix(uriPrefix)
                 // Open links with this app on Android
-                .setAndroidParameters(new DynamicLink.AndroidParameters.Builder().build())
+                .setAndroidParameters(new DynamicLink.AndroidParameters.Builder(BuildConfig.APPLICATION_ID).setMinimumVersion(16).build())
                 // Open links with com.example.ios on iOS
 //                .setIosParameters(new DynamicLink.IosParameters.Builder("com.example.ios").build())
                 .buildDynamicLink();
         return dynamicLink;
     }
 
+    private void buildShortDynamicLinkAndSendMessage(String uri, String uriPrefix, SmsManager smsManager, String phone) {
+        Task<ShortDynamicLink> shortLinkTask = FirebaseDynamicLinks.getInstance().createDynamicLink()
+                .setLink(Uri.parse(uri))
+                .setDomainUriPrefix(uriPrefix)
+                // Open links with this app on Android
+                .setAndroidParameters(new DynamicLink.AndroidParameters.Builder(BuildConfig.APPLICATION_ID).setMinimumVersion(16).build())
+                // Open links with com.example.ios on iOS
+//                .setIosParameters(new DynamicLink.IosParameters.Builder("com.example.ios").build())
+                .buildShortDynamicLink()
+                .addOnCompleteListener(this, new OnCompleteListener<ShortDynamicLink>() {
+                    @Override
+                    public void onComplete(@NonNull Task<ShortDynamicLink> task) {
+                        if (task.isSuccessful()) {
+                            // Short link created
+                            Uri shortLink = task.getResult().getShortLink();
+                            EditText v_channel = (EditText) findViewById(R.id.channel_name);
+                            String channel = v_channel.getText().toString();
+                            vSettings().mChannelName = channel;
+                            Uri dynamicLinkUriWithChannelId = getShortDynamicLinkUriWithChannelId(shortLink, channel);
+                            smsManager.sendTextMessage(phone, null, dynamicLinkUriWithChannelId.toString(), null, null);
+                        } else {
+                            // Error
+                            // ...
+                        }
+                    }
+                });
+    }
+
     private Uri getDynamicLinkUriWithChannelId(DynamicLink dynamicLink, String channelId) {
         Uri.Builder uriBuilder = dynamicLink.getUri().buildUpon();
+        uriBuilder.appendQueryParameter("channelid", channelId);
+        Uri dynamicLinkUriWithChannelId = uriBuilder.build();
+
+        return dynamicLinkUriWithChannelId;
+    }
+
+    private Uri getShortDynamicLinkUriWithChannelId(Uri uri, String channelId) {
+        Uri.Builder uriBuilder = uri.buildUpon();
         uriBuilder.appendQueryParameter("channelid", channelId);
         Uri dynamicLinkUriWithChannelId = uriBuilder.build();
 
