@@ -13,11 +13,14 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
+
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBar;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.provider.Settings;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -30,6 +33,11 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.dynamiclinks.FirebaseDynamicLinks;
+import com.google.firebase.dynamiclinks.PendingDynamicLinkData;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -116,6 +124,34 @@ public class CallActivity extends BaseActivity implements DuringCallEventHandler
             ab.setDisplayOptions(ActionBar.DISPLAY_SHOW_CUSTOM);
             ab.setCustomView(R.layout.ard_agora_actionbar_with_title);
         }
+        FirebaseDynamicLinks.getInstance()
+                .getDynamicLink(getIntent())
+                .addOnSuccessListener(this, new OnSuccessListener<PendingDynamicLinkData>() {
+                    @Override
+                    public void onSuccess(PendingDynamicLinkData pendingDynamicLinkData) {
+                        // Get deep link from result (may be null if no link is found)
+                        Uri deepLink = null;
+                        if (pendingDynamicLinkData != null) {
+                            deepLink = pendingDynamicLinkData.getLink();
+                            String channelName = deepLink.getQueryParameter("channelid");
+                            initUIandEventWithChannelName(channelName);
+                            return;
+                        }
+                        initUIandEvent();
+                        // Handle the deep link. For example, open the linked
+                        // content, or apply promotional credit to the user's
+                        // account.
+                        // ...
+
+                        // ...
+                    }
+                })
+                .addOnFailureListener(this, new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Log.w(CallActivity.this.toString(), "getDynamicLink:onFailure", e);
+                    }
+                });
     }
 
     @Override
@@ -137,10 +173,64 @@ public class CallActivity extends BaseActivity implements DuringCallEventHandler
         }
     }
 
-    @Override
     protected void initUIandEvent() {
         addEventHandler(this);
         String channelName = getIntent().getStringExtra(ConstantApp.ACTION_KEY_CHANNEL_NAME);
+
+        ActionBar ab = getSupportActionBar();
+        if (ab != null) {
+            TextView channelNameView = ((TextView) findViewById(R.id.ovc_page_title));
+            channelNameView.setText(channelName);
+        }
+
+        // programmatically layout ui below of status bar/action bar
+        LinearLayout eopsContainer = findViewById(R.id.extra_ops_container);
+        RelativeLayout.MarginLayoutParams eofmp = (RelativeLayout.MarginLayoutParams) eopsContainer.getLayoutParams();
+        eofmp.topMargin = getStatusBarHeight() + getActionBarHeight() + getResources().getDimensionPixelOffset(R.dimen.activity_vertical_margin) / 2; // status bar + action bar + divider
+
+        final String encryptionKey = getIntent().getStringExtra(ConstantApp.ACTION_KEY_ENCRYPTION_KEY);
+        final String encryptionMode = getIntent().getStringExtra(ConstantApp.ACTION_KEY_ENCRYPTION_MODE);
+
+        doConfigEngine(encryptionKey, encryptionMode);
+
+        mGridVideoViewContainer = (GridVideoViewContainer) findViewById(R.id.grid_video_view_container);
+        mGridVideoViewContainer.setItemEventHandler(new RecyclerItemClickListener.OnItemClickListener() {
+            @Override
+            public void onItemClick(View view, int position) {
+                onBigVideoViewClicked(view, position);
+            }
+
+            @Override
+            public void onItemLongClick(View view, int position) {
+
+            }
+
+            @Override
+            public void onItemDoubleClick(View view, int position) {
+                onBigVideoViewDoubleClicked(view, position);
+            }
+        });
+
+        SurfaceView surfaceV = RtcEngine.CreateRendererView(getApplicationContext());
+        preview(true, surfaceV, 0);
+        surfaceV.setZOrderOnTop(false);
+        surfaceV.setZOrderMediaOverlay(false);
+
+        mUidsList.put(0, surfaceV); // get first surface view
+
+        mGridVideoViewContainer.initViewContainer(getLayoutInflater(), getApplicationContext(), 0, mUidsList, mIsLandscape); // first is now full view
+
+        initMessageList();
+        notifyMessageChanged(new Message(new User(0, null), "start join " + channelName + " as " + (config().mUid & 0xFFFFFFFFL)));
+
+//        joinChannel(channelName, config().mUid);
+        joinRtcChannelWithToken(channelName, config().mUid);
+
+        optional();
+    }
+
+    protected void initUIandEventWithChannelName(String channelName) {
+        addEventHandler(this);
 
         ActionBar ab = getSupportActionBar();
         if (ab != null) {

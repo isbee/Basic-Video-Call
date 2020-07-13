@@ -37,23 +37,7 @@ public abstract class BaseActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        final View layout = findViewById(Window.ID_ANDROID_CONTENT);
-        ViewTreeObserver vto = layout.getViewTreeObserver();
-        vto.addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
-            @Override
-            public void onGlobalLayout() {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
-                    layout.getViewTreeObserver().removeOnGlobalLayoutListener(this);
-                } else {
-                    layout.getViewTreeObserver().removeGlobalOnLayoutListener(this);
-                }
-                initUIandEvent();
-            }
-        });
     }
-
-    protected abstract void initUIandEvent();
 
     protected abstract void deInitUIandEvent();
 

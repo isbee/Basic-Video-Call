@@ -30,9 +30,9 @@ public class NetworkTestActivity extends BaseActivity implements BeforeCallEvent
             ab.setDisplayOptions(ActionBar.DISPLAY_SHOW_CUSTOM);
             ab.setCustomView(R.layout.ard_agora_actionbar_with_back_btn);
         }
+        initUIandEvent();
     }
 
-    @Override
     protected void initUIandEvent() {
         addEventHandler(this);
 

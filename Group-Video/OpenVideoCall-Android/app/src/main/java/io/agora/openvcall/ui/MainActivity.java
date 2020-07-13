@@ -34,14 +34,9 @@ import com.google.firebase.dynamiclinks.ShortDynamicLink;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.net.URI;
-
 import io.agora.openvcall.BuildConfig;
 import io.agora.openvcall.R;
 import io.agora.openvcall.model.ConstantApp;
-import io.agora.openvcall.model.RtcChannelToken;
-import io.agora.openvcall.model.RtcChannelTokenService;
-import io.agora.openvcall.model.RtcChannelTokenServiceClient;
 import io.agora.openvcall.model.ShortenUrl;
 import io.agora.openvcall.model.ShortenUrlService;
 import io.agora.openvcall.model.ShortenUrlServiceClient;
@@ -68,9 +63,9 @@ public class MainActivity extends BaseActivity {
             ab.setDisplayOptions(ActionBar.DISPLAY_SHOW_CUSTOM);
             ab.setCustomView(R.layout.ard_agora_actionbar);
         }
+        initUIandEvent();
     }
 
-    @Override
     protected void initUIandEvent() {
         EditText v_channel = (EditText) findViewById(R.id.channel_name);
         v_channel.addTextChangedListener(new TextWatcher() {
@@ -289,7 +284,6 @@ public class MainActivity extends BaseActivity {
 
     private void getShortUrlAndSendMessage(String uri, SmsManager smsManager, String phone) {
         ShortenUrlService shortenUrlService = ShortenUrlServiceClient.getClient();
-        // TODO channelId 문자로 받을 것
         shortenUrlService.getShortenUrl("json", uri).enqueue(new Callback<ShortenUrl>() {
             @Override
             public void onResponse(Call<ShortenUrl> call, Response<ShortenUrl> response) {
@@ -337,11 +331,13 @@ public class MainActivity extends BaseActivity {
     }
 
     private Uri getDynamicLinkUriWithChannelId(DynamicLink dynamicLink, String channelId) {
-        Uri.Builder uriBuilder = dynamicLink.getUri().buildUpon();
-        uriBuilder.appendQueryParameter("channelid", channelId);
-        Uri dynamicLinkUriWithChannelId = uriBuilder.build();
+//        Uri.Builder uriBuilder = dynamicLink.getUri().buildUpon();
+//        uriBuilder.appendQueryParameter("channelid", channelId);
+//        Uri dynamicLinkUriWithChannelId = uriBuilder.build();
 
-        return dynamicLinkUriWithChannelId;
+        // 단순히 Uri.Builder.appendQueryParameter 를 호출하는 걸로는 DynamicLink Uri 상 ?가 안 붙게 되서,
+        // 아래처럼 직접 ?를 붙임.
+        return Uri.parse(dynamicLink.getUri().toString() + "?channelid=" + channelId);
     }
 
     private Uri getShortDynamicLinkUriWithChannelId(Uri uri, String channelId) {
