@@ -213,6 +213,8 @@ public class MainActivity extends BaseActivity {
             getShortUrlAndSendMessage(dynamicLinkUriWithChannelId.toString(), smsmanage, phone);
 //            smsmanage.sendTextMessage(phone, null, dynamicLinkUriWithChannelId.toString(), null, null);
 //            buildShortDynamicLinkAndSendMessage(uri, uriPrefix, smsmanage, phone);
+
+            forwardToRoom();
         }
     }
 
