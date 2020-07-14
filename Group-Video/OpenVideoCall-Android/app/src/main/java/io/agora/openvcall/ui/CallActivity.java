@@ -172,7 +172,7 @@ public class CallActivity extends BaseActivity implements DuringCallEventHandler
     protected void onDestroy() {
         super.onDestroy();
 
-        if (serviceConn != null) {
+        if (serviceConn != null && isOverlayServiceRunnging) {
             unbindService(serviceConn);
         }
     }
@@ -581,6 +581,8 @@ public class CallActivity extends BaseActivity implements DuringCallEventHandler
 
     private void doConfigEngine(String encryptionKey, String encryptionMode) {
         VideoEncoderConfiguration.VideoDimensions videoDimension = ConstantApp.VIDEO_DIMENSIONS[getVideoEncResolutionIndex()];
+//        videoDimension.width = 1920;
+//        videoDimension.height = 1080;
         VideoEncoderConfiguration.FRAME_RATE videoFps = ConstantApp.VIDEO_FPS[getVideoEncFpsIndex()];
         configEngine(videoDimension, videoFps, encryptionKey, encryptionMode);
     }

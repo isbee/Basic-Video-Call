@@ -413,5 +413,9 @@ public abstract class BaseActivity extends AppCompatActivity {
                 fps,
                 VideoEncoderConfiguration.STANDARD_BITRATE,
                 VideoEncoderConfiguration.ORIENTATION_MODE.ORIENTATION_MODE_FIXED_PORTRAIT));
+//        rtcEngine().setVideoEncoderConfiguration(new VideoEncoderConfiguration(videoDimension,
+//                fps,
+//                1130,
+//                VideoEncoderConfiguration.ORIENTATION_MODE.ORIENTATION_MODE_FIXED_PORTRAIT));
     }
 }

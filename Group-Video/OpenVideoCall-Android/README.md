@@ -95,3 +95,8 @@ The MIT License (MIT)
 ## 개발 과정에서의 이슈
 
 1. 일부 디바이스에서 example.page.link(dynamic link에 사용되는 도메인)을 url로 인식을 못해서 추가적으로 단축 url 서비스를 사용해야 했음
+2. resolution/bitrate/fps 관련
+  
+     - Resolution:  Video call 에서는 원격 video에 대해 1280x720 이상의 해상도는 지원하지 않는 듯 보임. [문서](https://docs.agora.io/en/faqs/API%20Reference/java/v2.4/classio_1_1agora_1_1rtc_1_1video_1_1_video_encoder_configuration.html)를 보면 ```Whether 720p+ can be supported depends on the device. If the device cannot support 720p, the frame rate will be lower than the one listed in the table.``` 라고 하지만, agora android sdk ```2.4.1``` 버전 부터 ```VideoDimensions```의 static 변수에서 1280x720이 마지막이다(그 전 버전에는 3840x2160 까지 존재했다). 또한 실제로 ```VideoEncoderConfiguration.VideoDimensions```의 값을 늘려봤는데 효과가 없었다.
+     - Bitrate: ```engine.setVideoEncoderConfiguration()```의 파라미터인 ```VideoEncoderConfiguration```로 설정 가능한데, 정확하게 효과가 있는지는 확인하지 못함. 문서 상에서는 추천 값만 사용하라고 나와 있음.
+     - Fps: 조사 x
