@@ -71,7 +71,7 @@ import io.agora.rtc.video.VideoEncoderConfiguration;
 
 public class CallActivity extends BaseActivity implements DuringCallEventHandler {
 
-    public static boolean isOverlayServiceRunnging;
+    public static boolean isOverlayServiceRunnging = false;
 
     private static final int ACTION_MANAGE_OVERLAY_PERMISSION_REQUEST_CODE = 1;
 
@@ -144,13 +144,9 @@ public class CallActivity extends BaseActivity implements DuringCallEventHandler
                             initUIandEventWithChannelName(channelName);
                             return;
                         }
-                        initUIandEvent();
-                        // Handle the deep link. For example, open the linked
-                        // content, or apply promotional credit to the user's
-                        // account.
-                        // ...
-
-                        // ...
+//                        initUIandEvent();
+                        String channelName = getIntent().getStringExtra(ConstantApp.ACTION_KEY_CHANNEL_NAME);
+                        joinRtcChannelWithToken(channelName, config().mUid);
                     }
                 })
                 .addOnFailureListener(this, new OnFailureListener() {
@@ -159,7 +155,26 @@ public class CallActivity extends BaseActivity implements DuringCallEventHandler
                         Log.w(CallActivity.this.toString(), "getDynamicLink:onFailure", e);
                     }
                 });
-         isOverlayServiceRunnging = false;
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        initUI();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+
+        if (serviceConn != null) {
+            unbindService(serviceConn);
+        }
     }
 
     @Override
@@ -179,6 +194,57 @@ public class CallActivity extends BaseActivity implements DuringCallEventHandler
             default:
                 return super.onOptionsItemSelected(item);
         }
+    }
+
+    protected void initUI() {
+        addEventHandler(this);
+        String channelName = getIntent().getStringExtra(ConstantApp.ACTION_KEY_CHANNEL_NAME);
+
+        ActionBar ab = getSupportActionBar();
+        if (ab != null) {
+            TextView channelNameView = ((TextView) findViewById(R.id.ovc_page_title));
+            channelNameView.setText(channelName);
+        }
+
+        // programmatically layout ui below of status bar/action bar
+        LinearLayout eopsContainer = findViewById(R.id.extra_ops_container);
+        RelativeLayout.MarginLayoutParams eofmp = (RelativeLayout.MarginLayoutParams) eopsContainer.getLayoutParams();
+        eofmp.topMargin = getStatusBarHeight() + getActionBarHeight() + getResources().getDimensionPixelOffset(R.dimen.activity_vertical_margin) / 2; // status bar + action bar + divider
+
+        final String encryptionKey = getIntent().getStringExtra(ConstantApp.ACTION_KEY_ENCRYPTION_KEY);
+        final String encryptionMode = getIntent().getStringExtra(ConstantApp.ACTION_KEY_ENCRYPTION_MODE);
+
+        doConfigEngine(encryptionKey, encryptionMode);
+
+        mGridVideoViewContainer = (GridVideoViewContainer) findViewById(R.id.grid_video_view_container);
+        mGridVideoViewContainer.setItemEventHandler(new RecyclerItemClickListener.OnItemClickListener() {
+            @Override
+            public void onItemClick(View view, int position) {
+                onBigVideoViewClicked(view, position);
+            }
+
+            @Override
+            public void onItemLongClick(View view, int position) {
+
+            }
+
+            @Override
+            public void onItemDoubleClick(View view, int position) {
+                onBigVideoViewDoubleClicked(view, position);
+            }
+        });
+
+        SurfaceView surfaceV = RtcEngine.CreateRendererView(getApplicationContext());
+        preview(true, surfaceV, 0);
+        surfaceV.setZOrderOnTop(false);
+        surfaceV.setZOrderMediaOverlay(false);
+
+        mUidsList.put(0, surfaceV); // get first surface view
+
+        mGridVideoViewContainer.initViewContainer(getLayoutInflater(), getApplicationContext(), 0, mUidsList, mIsLandscape); // first is now full view
+
+        initMessageList();
+        notifyMessageChanged(new Message(new User(0, null), "start join " + channelName + " as " + (config().mUid & 0xFFFFFFFFL)));
     }
 
     protected void initUIandEvent() {
@@ -434,8 +500,10 @@ public class CallActivity extends BaseActivity implements DuringCallEventHandler
 
     public void onClickOverlay(View view) {
         System.out.println("hi");
+        mGridVideoViewContainer.mGridVideoViewContainerAdapter = null;
         if (isOverlayServiceRunnging) {
             unbindService(serviceConn);
+            isOverlayServiceRunnging = false;
         }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {   // 마시멜로우 이상일 경우 overlay 권한 필요
@@ -449,6 +517,7 @@ public class CallActivity extends BaseActivity implements DuringCallEventHandler
         } else {
             bindService(new Intent(CallActivity.this, OverlayService.class), serviceConn, Context.BIND_AUTO_CREATE);
         }
+        moveTaskToBack (true);
     }
 
     private void initMessageList() {

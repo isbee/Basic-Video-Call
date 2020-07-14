@@ -110,8 +110,11 @@ public class OverlayService extends Service implements View.OnTouchListener {
     public boolean onTouch(View view, MotionEvent event) {
         if (gestureDetector.onTouchEvent(event)) {
             System.out.println("Click");
+            preview(false, null, 0);
+//            mUidsList.clear();
             forwardToRoom();
             wm.removeView(mView);
+            mView = null;
             return true;
         }
 

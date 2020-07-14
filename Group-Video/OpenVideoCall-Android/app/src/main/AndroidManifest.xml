@@ -39,7 +39,8 @@
             android:name=".ui.CallActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:parentActivityName=".ui.MainActivity"
-            android:theme="@style/VideoCallTheme">
+            android:theme="@style/VideoCallTheme"
+            android:launchMode="singleTask">
 
             <intent-filter android:autoVerify="true">
                 <action android:name="android.intent.action.VIEW" />
