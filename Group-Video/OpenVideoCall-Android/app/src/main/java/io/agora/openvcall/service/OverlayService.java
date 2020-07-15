@@ -3,7 +3,9 @@ package io.agora.openvcall.service;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Color;
 import android.graphics.PixelFormat;
+import android.graphics.drawable.GradientDrawable;
 import android.os.IBinder;
 import android.text.TextUtils;
 import android.view.GestureDetector;
@@ -90,6 +92,7 @@ public class OverlayService extends Service implements View.OnTouchListener {
 
         mGridVideoViewContainer = new GridVideoViewContainer(getApplicationContext());
         mGridVideoViewContainer.setOnTouchListener(this);
+
         overlayView.addView(mGridVideoViewContainer);
         mView = inflate.inflate(R.layout.overlay_service, overlayView);
         wm.addView(mView, params);
@@ -98,6 +101,11 @@ public class OverlayService extends Service implements View.OnTouchListener {
         preview(true, surfaceV, 0);
         surfaceV.setZOrderOnTop(false);
         surfaceV.setZOrderMediaOverlay(false);
+
+        GradientDrawable shape = new GradientDrawable();
+        shape.setShape(GradientDrawable.RECTANGLE);
+        shape.setStroke(10, Color.parseColor("#B6C7E1"));
+        surfaceV.setBackground(shape);
 
         mUidsList.put(0, surfaceV); // get first surface view
 
