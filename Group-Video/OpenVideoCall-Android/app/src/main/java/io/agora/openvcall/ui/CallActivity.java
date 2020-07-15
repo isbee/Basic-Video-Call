@@ -513,6 +513,7 @@ public class CallActivity extends BaseActivity implements DuringCallEventHandler
                 Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
                         Uri.parse("package:" + getPackageName()));
                 startActivityForResult(intent, ACTION_MANAGE_OVERLAY_PERMISSION_REQUEST_CODE);
+                return;
             }
         } else {
             bindService(new Intent(CallActivity.this, OverlayService.class), serviceConn, Context.BIND_AUTO_CREATE);
