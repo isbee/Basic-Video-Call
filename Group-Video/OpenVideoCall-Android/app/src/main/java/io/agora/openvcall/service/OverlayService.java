@@ -23,6 +23,7 @@ import android.widget.RelativeLayout;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 
 import io.agora.openvcall.AGApplication;
@@ -38,6 +39,7 @@ import io.agora.openvcall.ui.CallActivity;
 import io.agora.openvcall.ui.MainActivity;
 import io.agora.openvcall.ui.layout.GridVideoViewContainer;
 import io.agora.propeller.Constant;
+import io.agora.rtc.Constants;
 import io.agora.rtc.RtcEngine;
 import io.agora.rtc.video.VideoCanvas;
 import io.agora.rtc.video.VideoEncoderConfiguration;
@@ -51,7 +53,7 @@ public class OverlayService extends Service implements View.OnTouchListener {
 
     private GridVideoViewContainer mGridVideoViewContainer;
     // should only be modified under UI thread
-    private final HashMap<Integer, SurfaceView> mUidsList = new HashMap<>(); // uid = 0 || uid == EngineConfig.mUid
+    private HashMap<Integer, SurfaceView> mUidsList = new HashMap<>(); // uid = 0 || uid == EngineConfig.mUid
     private boolean mIsLandscape = false;
 
     private int _xDelta;
@@ -64,12 +66,14 @@ public class OverlayService extends Service implements View.OnTouchListener {
 
     @Override
     public IBinder onBind(Intent intent) {
-        return null; // 현재 RtcEngine은 application level에서 접근 가능하므로, activity에서 binder를 활용하지 않아도 됨.
-    }
+        ArrayList<Integer> uidList = (ArrayList<Integer>) intent.getSerializableExtra("UidList");
+        for (Integer uid : uidList) {
+            if (uid != 0) {
+                SurfaceView surfaceV = RtcEngine.CreateRendererView(getApplicationContext());
+                mUidsList.put(uid, surfaceV);
+            }
+        }
 
-    @Override
-    public void onCreate() {
-        super.onCreate();
         CallActivity.isOverlayServiceRunnging = true;
         LayoutInflater inflate = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         wm = (WindowManager) getSystemService(WINDOW_SERVICE);
@@ -97,21 +101,36 @@ public class OverlayService extends Service implements View.OnTouchListener {
         mView = inflate.inflate(R.layout.overlay_service, overlayView);
         wm.addView(mView, params);
 
-        SurfaceView surfaceV = RtcEngine.CreateRendererView(getApplicationContext());
-        preview(true, surfaceV, 0);
-        surfaceV.setZOrderOnTop(false);
-        surfaceV.setZOrderMediaOverlay(false);
+        SurfaceView surfaceView = RtcEngine.CreateRendererView(getApplicationContext());
+        preview(true, surfaceView, 0);
+        surfaceView.setZOrderOnTop(false);
+        surfaceView.setZOrderMediaOverlay(false);
+
+        mUidsList.put(0, surfaceView); // get first surface view
+        mGridVideoViewContainer.initViewContainer(inflate, getApplicationContext(), 0, mUidsList, mIsLandscape); // first is now full view
+
+        for (HashMap.Entry<Integer, SurfaceView> entry : mUidsList.entrySet()) {
+            if (entry.getKey() != 0) {
+                int uid = entry.getKey();
+                surfaceView = entry.getValue();
+                rtcEngine().setupRemoteVideo(new VideoCanvas(surfaceView, VideoCanvas.RENDER_MODE_HIDDEN, uid));
+                rtcEngine().setRemoteUserPriority(uid, Constants.USER_PRIORITY_HIGH);
+                HashMap<Integer, SurfaceView> slice = new HashMap<>(1);
+                slice.put(uid, mUidsList.get(uid));
+                mGridVideoViewContainer.initViewContainer(inflate, getApplicationContext(), uid, slice, mIsLandscape);
+                break;
+            }
+        }
 
         GradientDrawable shape = new GradientDrawable();
         shape.setShape(GradientDrawable.RECTANGLE);
         shape.setStroke(10, Color.parseColor("#B6C7E1"));
-        surfaceV.setBackground(shape);
+        surfaceView.setBackground(shape);
 
-        mUidsList.put(0, surfaceV); // get first surface view
-
-        mGridVideoViewContainer.initViewContainer(inflate, this, 0, mUidsList, mIsLandscape); // first is now full view
         mGridVideoViewContainer.mGridVideoViewContainerAdapter.mItemWidth = 300;
         mGridVideoViewContainer.mGridVideoViewContainerAdapter.mItemHeight = 300;
+
+        return null; // 현재 RtcEngine은 application level에서 접근 가능하므로, activity에서 binder를 활용하지 않아도 됨.
     }
 
     @Override

@@ -45,6 +45,7 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 
 import io.agora.openvcall.R;
 import io.agora.openvcall.model.AGEventHandler;
@@ -240,6 +241,17 @@ public class CallActivity extends BaseActivity implements DuringCallEventHandler
         surfaceV.setZOrderMediaOverlay(false);
 
         mUidsList.put(0, surfaceV); // get first surface view
+        for (HashMap.Entry<Integer, SurfaceView> entry : mUidsList.entrySet()) {
+            if (entry.getKey() != 0) {
+                int uid = entry.getKey();
+                SurfaceView surfaceView = entry.getValue();
+                rtcEngine().setupRemoteVideo(new VideoCanvas(surfaceView, VideoCanvas.RENDER_MODE_HIDDEN, uid));
+                rtcEngine().setRemoteUserPriority(uid, Constants.USER_PRIORITY_HIGH);
+//                HashMap<Integer, SurfaceView> slice = new HashMap<>(1);
+//                slice.put(uid, mUidsList.get(uid));
+//                mGridVideoViewContainer.initViewContainer(inflate, getApplicationContext(), uid, slice, mIsLandscape);
+            }
+        }
 
         mGridVideoViewContainer.initViewContainer(getLayoutInflater(), getApplicationContext(), 0, mUidsList, mIsLandscape); // first is now full view
 
@@ -508,7 +520,13 @@ public class CallActivity extends BaseActivity implements DuringCallEventHandler
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {   // 마시멜로우 이상일 경우 overlay 권한 필요
             if (Settings.canDrawOverlays(this)) {
-                bindService(new Intent(CallActivity.this, OverlayService.class), serviceConn, Context.BIND_AUTO_CREATE);
+                Intent intent = new Intent(CallActivity.this, OverlayService.class);
+                ArrayList<Integer> uidList = new ArrayList<>();
+                for (HashMap.Entry<Integer, SurfaceView> entry : mUidsList.entrySet()) {
+                    uidList.add(entry.getKey());
+                }
+                intent.putExtra("UidList", uidList);
+                bindService(intent, serviceConn, Context.BIND_AUTO_CREATE);
             } else {
                 Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
                         Uri.parse("package:" + getPackageName()));
@@ -516,7 +534,13 @@ public class CallActivity extends BaseActivity implements DuringCallEventHandler
                 return;
             }
         } else {
-            bindService(new Intent(CallActivity.this, OverlayService.class), serviceConn, Context.BIND_AUTO_CREATE);
+            Intent intent = new Intent(CallActivity.this, OverlayService.class);
+            ArrayList<Integer> uidList = new ArrayList<>();
+            for (HashMap.Entry<Integer, SurfaceView> entry : mUidsList.entrySet()) {
+                uidList.add(entry.getKey());
+            }
+            intent.putExtra("UidList", uidList);
+            bindService(intent, serviceConn, Context.BIND_AUTO_CREATE);
         }
         moveTaskToBack (true);
     }
@@ -974,6 +998,7 @@ public class CallActivity extends BaseActivity implements DuringCallEventHandler
         if (mSmallVideoViewDock != null) {
             mSmallVideoViewDock.setVisibility(View.GONE);
         }
+        int u = config().mUid;
         mGridVideoViewContainer.initViewContainer(getLayoutInflater(), getApplicationContext(), config().mUid, mUidsList, mIsLandscape);
 
         mLayoutType = LAYOUT_TYPE_DEFAULT;
